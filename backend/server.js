@@ -18,7 +18,7 @@ app.post('/api/start-challenge', (req, res) => {
   const containerName = `instance_${Date.now()}`;
   const port = 8081 + Math.floor(Math.random() * 1000); // random port to avoid collisions
 
-  const cmd = `docker run -d --name ${containerName} -p ${port}:80 nginx`;
+  const cmd = `docker run -d --name ${containerName} -p ${port}:80 instance_1`;
 
   exec(cmd, (err, stdout, stderr) => {
     if (err) {
