@@ -15,7 +15,7 @@ app.post('/api/start-challenge', (req, res) => {
   const containerName = `instance_${Date.now()}`;
   const port = 8081 + Math.floor(Math.random() * 1000);
 
-  const cmd = `docker run -d --name ${containerName} -p ${port}:80 instance_1`;
+  const cmd = `docker run -rm -d --name ${containerName} -p ${port}:80 instance_1`;
 
   exec(cmd, (err, stdout, stderr) => {
     if (err) {
@@ -34,7 +34,7 @@ app.post('/api/stop-challenge', (req, res) => {
   const { containerId } = req.body;
   if (!containerId) return res.status(400).json({ error: 'Container ID required' });
 
-  const cmd = `docker stop ${containerId} && docker rm ${containerId}`;
+  const cmd = `docker stop ${containerId}`;
   exec(cmd, (err, stdout, stderr) => {
     if (err) {
       console.error(`Error stopping container: ${stderr}`);
