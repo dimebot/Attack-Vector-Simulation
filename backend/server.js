@@ -1,77 +1,131 @@
-// backend/server.js
-const express = require('express');
-const { exec } = require('child_process');
-const cors = require('cors');
-const app = express();
-const PORT = 3001;
+import React, { useState, useEffect } from 'react';
+import './index.css';
 
-app.use(cors());
-app.use(express.json());
+function App() {
+  const [challenge, setChallenge] = useState(null);
+  const [flag, setFlag] = useState('');
+  const [flagMessage, setFlagMessage] = useState('');
+  const [isCorrect, setIsCorrect] = useState(false);
 
-// Root route for sanity check
-app.get('/', (req, res) => {
-  res.send('Backend is alive!');
-});
-
-// API to start a vulnerable container (nginx for now)
-app.post('/api/start-challenge', (req, res) => {
-  const containerName = `instance_${Date.now()}`;
-  const port = 8081 + Math.floor(Math.random() * 1000); // random port to avoid collisions
-
-  const cmd = `docker run -d --name ${containerName} -p ${port}:80 instance_1`;
-
-  exec(cmd, (err, stdout, stderr) => {
-    if (err) {
-      console.error(`Error: ${stderr}`);
-      return res.status(500).json({ error: 'Failed to start container' });
-    }
-    return res.json({
-      message: 'Challenge started',
-      containerId: stdout.trim(),
-      accessUrl: `http://localhost:${port}`
-    });
-  });
-});
-
-app.post('/api/stop-challenge', (req, res) => {
-    const { containerId } = req.body;
-    if (!containerId) return res.status(400).json({ error: 'Container ID required' });
-  
-    const cmd = `docker stop ${containerId} && docker rm ${containerId}`;
-    exec(cmd, (err, stdout, stderr) => {
-      if (err) {
-        console.error(`Error stopping container: ${stderr}`);
-        return res.status(500).json({ error: 'Failed to stop container' });
-      }
-      return res.json({ message: 'Challenge stopped' });
-    });
-  });
-
-  app.get('/api/status', (req, res) => {
-    exec(`docker ps --filter "ancestor=instance_1" --format "{{.ID}} {{.Names}} {{.Ports}}"`, (err, stdout, stderr) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to get status' });
-      }
-  
-      const lines = stdout.trim().split('\n');
-      if (lines.length === 0 || !stdout.trim()) {
-        return res.json({ running: false });
-      }
-  
-      const parts = lines[0].split(' ');
-      const containerId = parts[0];
-      const portMatch = stdout.match(/0\.0\.0\.0:(\d+)->80/);
-      const port = portMatch ? portMatch[1] : null;
-  
-      res.json({
-        running: true,
-        containerId,
-        accessUrl: `http://localhost:${port}`
+  useEffect(() => {
+    fetch('/api/status')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.running) {
+          setChallenge({
+            containerId: data.containerId,
+            accessUrl: data.accessUrl,
+          });
+        }
       });
-    });
-  });
-  
+  }, []);
 
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
-});
+  const startChallenge = async () => {
+    const res = await fetch('/api/start-challenge', {
+      method: 'POST',
+    });
+    const data = await res.json();
+    setChallenge({
+      containerId: data.containerId,
+      accessUrl: data.accessUrl,
+    });
+  };
+
+  const stopChallenge = async () => {
+    if (!challenge) return;
+    await fetch('/api/stop-challenge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ containerId: challenge.containerId }),
+    });
+    setChallenge(null);
+    setFlag('');
+    setFlagMessage('');
+    setIsCorrect(false);
+  };
+
+  const submitFlag = async () => {
+    const res = await fetch('/api/submit-flag', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ flag }),
+    });
+    const data = await res.json();
+    setFlagMessage(data.message);
+    setIsCorrect(data.message.includes('Correct'));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <header className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md">
+        <h1 className="text-2xl font-bold">Attack Vector Simulation</h1>
+      </header>
+
+      <main className="px-4 py-8">
+        <h2 className="text-3xl font-bold text-center mb-8">Welcome to Attack Vector Simulation</h2>
+        <div className="flex justify-center">
+          <div className="bg-gray-800 rounded-xl p-6 shadow-lg max-w-md">
+            <h3 className="text-lg font-semibold text-blue-400">Instance 1: Website Comments</h3>
+            <p className="text-sm text-gray-300 mt-2 mb-4">
+              Important information does persist if the source isn't updated properly.
+            </p>
+
+            {!challenge ? (
+              <button
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded"
+                onClick={startChallenge}
+              >
+                Start Instance
+              </button>
+            ) : (
+              <div>
+                <p className="text-green-400 mb-2 break-words">
+                  Machine running at: <span className="font-mono">{challenge.accessUrl}</span>
+                </p>
+                <button
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded mb-4"
+                  onClick={stopChallenge}
+                >
+                  Stop Instance
+                </button>
+              </div>
+            )}
+
+            <div className="mt-4">
+              <input
+                type="text"
+                placeholder="Enter flag..."
+                value={flag}
+                onChange={(e) => setFlag(e.target.value)}
+                className="p-2 rounded text-black w-full mb-2"
+              />
+              <button
+                onClick={submitFlag}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+              >
+                Submit Flag
+              </button>
+              {flagMessage && (
+                <div className="mt-2 text-sm text-yellow-400">
+                  <p>{flagMessage}</p>
+                  {isCorrect && (
+                    <a
+                      href="https://owasp.org/www-project-top-ten/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 underline block mt-2"
+                    >
+                      View Mitigation Techniques on OWASP
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default App;
