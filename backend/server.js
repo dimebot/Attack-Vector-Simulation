@@ -48,7 +48,7 @@ app.post('/api/stop-challenge', (req, res) => {
   });
 
   app.get('/api/status', (req, res) => {
-    exec(`docker ps --filter "ancestor=nginx" --format "{{.ID}} {{.Names}} {{.Ports}}"`, (err, stdout, stderr) => {
+    exec(`docker ps --filter "ancestor=instance_1" --format "{{.ID}} {{.Names}} {{.Ports}}"`, (err, stdout, stderr) => {
       if (err) {
         return res.status(500).json({ error: 'Failed to get status' });
       }
@@ -70,6 +70,7 @@ app.post('/api/stop-challenge', (req, res) => {
       });
     });
   });
+  
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

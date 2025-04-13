@@ -49,9 +49,9 @@ function App() {
         <h2 className="text-3xl font-bold text-center mb-8">Welcome to Attack Vector Simulation</h2>
         <div className="flex justify-center">
           <div className="bg-gray-800 rounded-xl p-6 shadow-lg max-w-md">
-            <h3 className="text-lg font-semibold text-blue-400">Challenge 1: Docker PrivEsc</h3>
+            <h3 className="text-lg font-semibold text-blue-400">Instance 1: Website Comments</h3>
             <p className="text-sm text-gray-300 mt-2 mb-4">
-              Start this CTF room and escalate privileges inside a vulnerable Docker container.
+              Important information does persist if the source isn't updated properly.
             </p>
 
             {!challenge ? (
