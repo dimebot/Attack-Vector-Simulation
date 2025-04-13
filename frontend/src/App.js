@@ -6,7 +6,7 @@ function App() {
 
   // Fetch the status of the challenge on component mount
   useEffect(() => {
-    fetch('http://localhost:3001/api/status')
+    fetch('/api/status')
       .then((res) => res.json())
       .then((data) => {
         if (data.running) {
@@ -19,7 +19,7 @@ function App() {
   }, []);
 
   const startChallenge = async () => {
-    const res = await fetch('http://localhost:3001/api/start-challenge', {
+    const res = await fetch('/api/start-challenge', {
       method: 'POST',
     });
     const data = await res.json();
@@ -31,7 +31,7 @@ function App() {
 
   const stopChallenge = async () => {
     if (!challenge) return;
-    await fetch('http://localhost:3001/api/stop-challenge', {
+    await fetch('/api/stop-challenge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ containerId: challenge.containerId }),
