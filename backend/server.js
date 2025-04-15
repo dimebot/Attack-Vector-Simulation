@@ -24,14 +24,23 @@ app.post('/api/start-challenge', (req, res) => {
       console.error(`Error: ${stderr}`);
       return res.status(500).json({ error: 'Failed to start container' });
     }
-    return res.json({
-      message: 'Challenge started',
-      containerId: stdout.trim(),
-      accessUrl: `http://localhost:${port}`
+
+    // Fetch the public IP address using curl
+    exec('curl -4 ifconfig.me', (ipErr, ipStdout, ipStderr) => {
+      if (ipErr) {
+        console.error(`Error fetching public IP: ${ipStderr}`);
+        return res.status(500).json({ error: 'Failed to fetch public IP' });
+      }
+
+      const publicIp = ipStdout.trim();
+      return res.json({
+        message: 'Challenge started',
+        containerId: stdout.trim(),
+        accessUrl: `http://${publicIp}:${port}`
+      });
     });
   });
 });
-
 
 app.post('/api/stop-challenge', (req, res) => {
   const { containerId } = req.body;
@@ -63,10 +72,19 @@ app.get('/api/status', (req, res) => {
     const portMatch = stdout.match(/0\.0\.0\.0:(\d+)->80/);
     const port = portMatch ? portMatch[1] : null;
 
-    res.json({
-      running: true,
-      containerId,
-      accessUrl: `http://localhost:${port}`
+    // Fetch the public IP address using curl
+    exec('curl -4 ifconfig.me', (ipErr, ipStdout, ipStderr) => {
+      if (ipErr) {
+        console.error(`Error fetching public IP: ${ipStderr}`);
+        return res.status(500).json({ error: 'Failed to fetch public IP' });
+      }
+
+      const publicIp = ipStdout.trim();
+      res.json({
+        running: true,
+        containerId,
+        accessUrl: `http://${publicIp}:${port}`
+      });
     });
   });
 });
