@@ -94,7 +94,7 @@ function App() {
             <div className="mt-6">
               <input
                 type="text"
-                placeholder="Enter flag..."
+                placeholder="flag{...}"
                 value={flag}
                 onChange={(e) => setFlag(e.target.value)}
                 className="p-3 rounded text-black w-full mb-3"
