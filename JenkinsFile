@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    environment {
+        SSH_CREDENTIALS_ID = credentials('CREDS')  // Your Jenkins SSH credentials ID
+        EC2_USER = credentials('EC2_USER')
+        EC2_HOST = credentials('EC2_HOST')
+        DEST_PATH = credentials('DEST_PATH')
+    }
+
+    options {
+        skipStagesAfterUnstable()
+    }
+
+    stages {
+        stage('Checkout Frontend Code') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/dimebot/Attack-Vector-Simulation.git'
+                    ]]
+                ])
+            }
+        }
+
+        stage('Detect Frontend Changes') {
+            when {
+                changeset "frontend/**"
+            }
+            steps {
+                echo '✅ Frontend code changed. Proceeding with build and deploy.'
+            }
+        }
+
+        stage('Install Dependencies') {
+            when {
+                changeset "frontend/**"
+            }
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            when {
+                changeset "frontend/**"
+            }
+            steps {
+                dir('frontend') {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Deploy to EC2') {
+            when {
+                changeset "frontend/**"
+            }
+            steps {
+                sshagent([env.SSH_CREDENTIALS_ID]) {
+                    sh '''
+                        ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+                        scp -r frontend/build/* $EC2_USER@$EC2_HOST:$DEST_PATH/
+                    '''
+                }
+            }
+        }
+
+        stage('Done') {
+            when {
+                changeset "frontend/**"
+            }
+            steps {
+                echo '🎉 Frontend built and deployed to EC2 successfully!'
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo '❌ Frontend pipeline failed!'
+        }
+    }
+}
