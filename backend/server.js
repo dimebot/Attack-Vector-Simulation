@@ -94,7 +94,7 @@ app.post('/api/submit-flag', (req, res) => {
   const { flag } = req.body;
 
   // Replace with your actual flag
-  const correctFlag = "flag{1234}";
+  const correctFlag = "flag{12345}";
 
   if (flag === correctFlag) {
     return res.json({ message: "✅ Correct flag! Well done." });
