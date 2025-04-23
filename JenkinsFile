@@ -34,17 +34,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            when {
-                changeset "frontend/**"
-            }
-            steps {
-                dir('frontend') {
-                    sh 'npm install'
-                }
-            }
-        }
-
         stage('Build Frontend') {
             when {
                 changeset "frontend/**"
