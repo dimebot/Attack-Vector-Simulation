@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+
+    environment {
+        SSH_CREDENTIALS_ID = credentials('CREDS')  // Your Jenkins SSH credentials ID
+        EC2_USER = credentials('EC2_USER')
+        EC2_HOST = credentials('EC2_IP')
+        DEST_PATH = credentials('DEST_PATH_BACKEND')
+    }
+
+
+    stages {
+        stage('Checkout Backend Code') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/dimebot/Attack-Vector-Simulation.git'
+                    ]]
+                ])
+            }
+        }
+
+        stage('Check for Backend Changes') {
+            steps {
+                script {
+                    def changes = sh(script: "git diff --name-only HEAD~1 HEAD | grep '^backend/' || true", returnStdout: true).trim()
+                    if (changes) {
+                        currentBuild.description = 'Backend changes detected.'
+                        env.BACKEND_CHANGED = "true"
+                    } else {
+                        echo "No backend changes detected."
+                        env.BACKEND_CHANGED = "false"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy Backend') {
+            when {
+                expression { env.BACKEND_CHANGED == "true" }
+            }
+            steps {
+                sshagent([env.SSH_CREDENTIALS_ID]) {
+                    sh """
+                        scp -r backend/* $EC2_USER@$EC2_HOST:$DEST_PATH/
+                        ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "pkill -f server.js"
+                        ssh -f -o StrictHostKeyChecking=no ubuntu@13.203.148.108 "cd /var/www/html/backend && nohup node server.js > /dev/null 2>&1 & echo 'Server started in background'"
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
