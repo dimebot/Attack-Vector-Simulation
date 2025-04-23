@@ -46,7 +46,7 @@ pipeline {
                     sh """
                         scp -r backend/* $EC2_USER@$EC2_HOST:$DEST_PATH/
                         ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "pkill -f server.js"
-                        ssh -f -o StrictHostKeyChecking=no ubuntu@13.203.148.108 "cd /var/www/html/backend && nohup node server.js > /dev/null 2>&1 & echo 'Server started in background'"
+                        ssh -f -o StrictHostKeyChecking=no ubuntu@13.203.148.108 "cd $DEST_PATH && nohup node server.js > /dev/null 2>&1 & echo 'Server started in background'"
                     """
                 }
             }
