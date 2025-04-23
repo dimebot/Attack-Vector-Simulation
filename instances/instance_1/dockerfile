@@ -1,7 +1,0 @@
-FROM nginx:latest
-# Clean default nginx html directory
-
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy everything from current challenge directory
-COPY index.html /usr/share/nginx/html/
