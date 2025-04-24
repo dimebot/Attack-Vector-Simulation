@@ -62,7 +62,7 @@ function App() {
       </header>
 
       <main className="px-6 py-10">
-        <h2 className="text-4xl font-bold text-center mb-10">Welcome Here</h2>
+        <h2 className="text-4xl font-bold text-center mb-10">Welcome</h2>
         <div className="flex justify-center">
           <div className="bg-gray-800 rounded-2xl p-8 shadow-lg w-full max-w-2xl">
             <h3 className="text-xl font-semibold text-blue-400">Instance 1: Website Comments</h3>
