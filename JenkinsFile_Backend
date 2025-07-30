@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SSH_CREDENTIALS_ID = credentials('CREDS')  // Your Jenkins SSH credentials ID
+        SSH_CREDENTIALS_ID = credentials('CREDS')  // Jenkins SSH credentials ID
         EC2_USER = credentials('EC2_USER')
         EC2_HOST = credentials('EC2_IP')
         DEST_PATH = credentials('DEST_PATH_BACKEND')
