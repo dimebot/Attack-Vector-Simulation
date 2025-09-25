@@ -30,7 +30,7 @@ pipeline {
                 changeset "frontend/**"
             }
             steps {
-                echo '✅ Frontend code changed. Proceeding with build and deploy.'
+                echo 'Frontend code changed. Proceeding with build and deploy.'
             }
         }
 
@@ -64,14 +64,14 @@ pipeline {
                 changeset "frontend/**"
             }
             steps {
-                echo '🎉 Frontend built and deployed to EC2 successfully!'
+                echo 'Frontend built and deployed to EC2 successfully!'
             }
         }
     }
 
     post {
         failure {
-            echo '❌ Frontend pipeline failed!'
+            echo 'Frontend pipeline failed!'
         }
     }
 }
